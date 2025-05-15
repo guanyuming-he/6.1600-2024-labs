@@ -19,7 +19,20 @@ def problem_2a():
 
 # return password, where toy_hash(password) is in hashes.txt
 def problem_2c():
-    password = None
+    password:str = None
+    # Assume the hint about q2a applies here:
+    # password is a string over [a-z]
+    gen = q2a.gen_str();
+
+    with open("hashes.txt") as file:
+        hash_strings = set(line.strip() for line in file)
+        
+        for i in tqdm(range(2**48)):
+            password = next(gen)
+            if (toy_hash(password.encode("ascii")).hex() in hash_strings):
+                break;
+
+    print(f"2c: password = {password}")
     return password
 
 # return probability of being in bin k
@@ -56,6 +69,4 @@ def problem_4b():
 
 # Tests
 if __name__ == "__main__":
-    gen = q2a.gen_str();
-    for i in range(0, 26*26+1):
-        print(f", {next(gen)}");
+    problem_2c()
