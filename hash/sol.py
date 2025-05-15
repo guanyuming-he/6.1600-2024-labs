@@ -1,54 +1,20 @@
 from hashall import *
 from hashbig import *
+from tqdm import tqdm
+
+import q2a
 
 # return password, where toy_hash(password) = <HASH_OUTPUT_BY_GRADESCOPE>
 def problem_2a():
-    # First, this can generate a-z strings fast
-    # 26^9 > 2^40 
-    # but for handling collisions, 
-    # I will make it one item longer
-    powers = [ int(26**n) for n in range(11) ]
-    letters = "abcdefghijklmnopqrstuvwxyz"
-    # assert here in case I miss a letter!
-    assert len(letters) == 26
+    password:str = None
+    gen = q2a.gen_str();
 
-    def gen_string(istr: int):
-        """
-        The hint says that the password will
-        be a string of a-z.
-        There are 26 letters. And the string
-        can be seen as a 26-base number,
-        a_0 * 26^0 + a_1 * 26^1 + ...
+    for i in tqdm(range(2**48)):
+        password = next(gen)
+        if (toy_hash(password.encode("ascii")).hex() == "01bceba8ff08"):
+            break
 
-        This function finds the array {a_n}
-        and returns
-        { letter[a_n] }, where letter[i] gives the 
-        letter at i.
-        """
-        # find the largest i for which 26^i <= istr
-        i = len(powers) - 1
-        while powers[i] > istr:
-            i = i-1 
-
-        # result string
-        # in python strings are immutable,
-        # so I have to join all characters
-        # together, which is slow.
-        ret = ''
-        # the remainder
-        r = istr
-        # now we have the i, iterate to 0
-        while i >= 0:
-            # a_i 
-            ai = r // power[i]
-            r = r - ai*power[i]
-            ret = ret + letters[ai]
-            # don't forget this
-            i -= 1 
-
-        return ret
-
-    password = None
+    print(f"2a: password = {password}")
     return password
 
 # return password, where toy_hash(password) is in hashes.txt
@@ -88,4 +54,8 @@ def problem_4b():
     return h1,h2
 
 
-
+# Tests
+if __name__ == "__main__":
+    gen = q2a.gen_str();
+    for i in range(0, 26*26+1):
+        print(f", {next(gen)}");
