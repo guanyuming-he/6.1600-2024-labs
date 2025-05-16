@@ -38,8 +38,14 @@ calcaulate such a hash.
 \newpage \section*{Problem 2}
 
 B)
+Number of total non-empty strings $\Sigma^{\le n}$ is $26^{20}$. By the birthday
+paradox, the number of average tries is $26^{20}$.
 
 D)
+Since each salt is unique, the cost would change to be as if we only have a
+single hash target at a time (ignoring collisions). That is, it would be slowed
+by the factor of the number of hashes in \verb|hashes.txt|.
+
 
 % make sure you have each problem in a different page.
 \newpage \section*{Problem 4}
