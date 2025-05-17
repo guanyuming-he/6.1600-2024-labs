@@ -51,6 +51,93 @@ by the factor of the number of hashes in \verb|hashes.txt|.
 \newpage \section*{Problem 4}
 
 A)
+The problem is not very clearly described. Here is one possible meaning:
+
+\paragraph{One possible meaning}
+Let $x$ be any input. I am given $H_0 := H(x), H_n := H(H_{n-1})$, and I know
+that for some $m$, $H_m = H_0$ (assuming no subcycles, i.e., $m$ is the smallest
+number to have a cycle from $H_0$).
+
+However, I am not given $x$; I only have the values $(H_n)_{n=0}^m$.  Because I
+don't know $x$, I can't use the collision $H(x) = H(H_{m-1})$; I don't even know
+if $x = H_{m-1}$ or not.
+
+Note that I have both $H_0 = H_m$ by cycle and $H^{m}(H_0) = H_m$ by induction
+on the definition of $(H_n)_{n=0}^m$. It then turns out $H_0 = H^m(H_0)$. Thus,
+for all natural number $i$, $H^{im}(H_0) = H_0$. Moreover, because it is a
+cycle, we can be more general:
+\begin{equation} \label{eq:q4a.1}
+	\forall i\ j \in \mathbf{N},\ 
+	H^i (H_j) = H^{i \bmod m} (H_{j \bmod m}) = H_{(i+j) \bmod m}
+\end{equation}
+There's also a little more piece of information; since $m$ is the smallest
+number for which we have a cycle, 
+\begin{equation} \label{eq:q4a.2}
+	\forall i \ne j \mod m,\ 
+	H_i \ne H_j
+\end{equation}
+
+Note how similar the structure is to Fermat's little theorem. This discovery is
+amazing, but I don't immediately see how \eqref{q4a.1} helps me find a
+collision faster. On the other hand, the more trivial \eqref{q4a.2} helps me,
+only a little. It essentially provides $m$ distinct pairs of preimages and
+hash values, i.e., $(H_i, H_{i+1})_{i=0}^{m-1}$. So I benefit from here doing
+$m$ less calculations.
+
+But I fail to see how to use \eqref{q4a.1} to help. I asked a question here 
+\url{https://crypto.stackexchange.com/questions/115058/how-can-having-a-cycle-help-finding-a-hash-collision},
+which may find an answer later.
+
+\paragraph{Another possible meaning}
+I later read Section 6.4.3 of [Katz, Lindell, 3rd ed.], which seems to be more
+of the meaning of the questions. But this assumes that the length of the cycle
+equals exactly the cardinality of the range of $H$, which isn't explicitly
+mentioned in the question.
+
+Well, anyway, so this possible scenario is essential the previous one plus this
+additional information:
+\begin{equation}
+	m = \text{ size of the range of } H
+\end{equation}
+
+How does this seemingly unimportant information help? Well, it actually
+guarantees that every hash values falls into the cycle, which is very important.
+Under this strong guaranteen, we don't have to store all experienced (preimage,
+hash) pair to succeed.
+
+[Katz, Lindell] gives this even division scheme: partition the whole range,
+i.e., the cycle, into $\sqrt{m}$ segments, each of length $\sqrt{m}$. Here's the
+clever part: one only stores the start and end of each segment, i.e.,
+$(H_{i\sqrt{m}},, H_{(i+1)\sqrt{m}})$. Thus, we only have to store $2\sqrt{m}$
+pairs in worst case (actually, now, in all cases), whereas previously we needed
+to store $m$ pairs.
+
+The algorithm runs as follows: given any hash value $y$, we can find a preimage
+of it inside the range of $H$, because the cycle covers the whole range, $y$
+must fall into one of the segments. 
+\begin{enumerate}
+\item If $y$ is one of the end points $H_{(i+1)\sqrt{m}}$, then doing
+	$\sqrt{m}-1$ hashes from the start point gives a preimage of $y$.
+\item If otherwise $y$ is inside a segment, then applying $H$ less than
+	$\sqrt{m}$ times is guaranteed to reach a endpoint. Then, we find its
+	startpoint, and start to do $\sqrt{m} - 1 - $ the number of $H$ on $y$ to
+	reach the endpoint hashes.
+\end{enumerate}
+
+This gives an algorithm to find a preimage inside the range, for any hash value.
+Thus, to turn it into a collision, one simply picks any value out of the range,
+calculate its hash, and use the algorithm to find another preimage that's inside
+the range.
+
+To store even less bits, reduce the number of segments, which will in turn
+increase the number of hashes we need to do. It is possible to store less than
+$\sqrt{m}$ bits while being able to still do it faster than brute force.
+
+
+
+
+
+
 
 \end{document}
 
