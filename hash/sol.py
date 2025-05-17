@@ -37,27 +37,36 @@ def problem_2c():
 
 # return probability of being in bin k
 def problem_3a(B, N):
-    prob = None
+    prob = 1/N
     return prob
 
 # return probability of both balls being in bin k
 def problem_3b(B,N):
-    prob = None
+    prob = 1/N**2
     return prob
 
 # return number of ball pairs
 def problem_3c(B):
-    prob = None
+    prob = B*(B-1) / 2
     return prob
 
 # return reasonable upper bound
 def problem_3d(B,N):
-    prob = None
+    # An upper bound is the sum of all probabilities
+    # that two balls falls into a specific bin.
+    # Note that it can't be larger than 1.
+    prob = min(problem_3c(B)*N*problem_3b(B,N), 1)
     return prob
     
 # return reasonable upper bound
 def problem_3e(L,N):
-    prob = None
+    # It's little confusing for the lab to say that
+    # for _each_ x, H(x) is independent and uniformly chosen.
+    # What it means is that the values of H look like independent
+    # and uniformly distributed.
+
+    # Note that the size of {0,1}^N = 2^N.
+    prob = problem_3d(L,2**N)
     return prob
 
 # return h1,h2 where H(h1) == H(h2)
