@@ -1,4 +1,6 @@
 \documentclass{6160}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
 
 \author{Guanyuming He}
 % \problem{A} means Problem Set A.
@@ -51,9 +53,104 @@ by the factor of the number of hashes in \verb|hashes.txt|.
 \newpage \section*{Problem 4}
 
 A)
-The problem is not very clearly described. Here is one possible meaning:
+The problem is not very clearly described. At first, I thought I was given the
+cycle $H^1(x), H^2(x), \dots, H^n(x)$ (without $x$ because otherwise just output
+$x$ and $H^{n-1}(x)$.
 
-\paragraph{One possible meaning}
+But after seeing question B), it seems that I should calculate the cycle itself,
+and then use it to find a collision, with the condition that I store $\ll
+\sqrt{2^{56}}$ bits. It is totally different then. If we should calculate such a
+cycle from $x$, and stop immediately when we first have such a cycle, then there
+are two cases:
+\begin{enumerate}
+	\item We have $H^n(x) = x$.
+	\item We have $H^n(x) = H^m(x)$ for some $1 \le m < n$.
+\end{enumerate}
+
+\begin{tikzpicture}[->, node distance=.9cm]
+% Tail
+\node (x) at (0,0) {$x$};
+\node (a1) at (1.5,0) {};
+\node (a2) at (3,0) {};
+\node (a3) at (4.5,0) {};
+\node (m) at (6,0) {};
+\node (cycle1) at (6.7,0.8) {};
+\node (cycle2) at (6.2,1.6) {};
+\node (cycle3) at (5.3,1.6) {};
+\node (cycle4) at (4.8,0.8) {};
+
+\draw (x) -- (a1);
+\draw (a1) -- (a2);
+\draw (a2) -- (a3);
+\draw (a3) -- (m);
+\draw (m) -- (cycle1);
+\draw (cycle1) -- (cycle2);
+\draw (cycle2) -- (cycle3);
+\draw (cycle3) -- (cycle4);
+\draw (cycle4) -- (m);
+
+\node at (6.9,0) {\small $H^m = H^n$};
+\end{tikzpicture}
+\begin{tikzpicture}[->]
+\coordinate (x) at (0,0);
+\coordinate (p1) at (1,1);
+\coordinate (p2) at (2,0);
+\coordinate (p3) at (1,-1);
+
+\draw (x) node[left] {$x = H^n$} -- (p1) -- (p2) -- (p3) -- (x);
+\end{tikzpicture}
+
+There's a good algorithm, called Floyd's algorithm, to find the cycle while
+storing only two (preimage, hash) pairs at all time. 
+\begin{theorem}
+Suppose starting from $x$, we first find a cycle at $H^n(x)$ for some $n$.
+Define sequence $x_0 := x; x_{t+1} := H(x_t)$. Suppose there's a cycle that has
+not subcycle, such that $x_m = x_n$ for $0 \le m < n$; and suppose that all
+other elements in the sequence are distinct. Clearly, the sequence repeats after
+$i \ge n$.
+
+Then, for any $0 \le i$:
+\begin{enumerate}
+	\item If $i < m$, then $x_i \ne x_{2i}$.
+	\item If $i \ge m$, then we have $x_i = x_{2i}$ iff $i \bmod (n-m) = 0$.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+If $i < m$, because the first few $m$ elements are distinct to all others, we by
+definition have $x_i \ne x_{2i}$.
+
+Now suppose $i \ge m$. By the cycle, we know that $x_{i} = x_{i \bmod (n-m)}$.
+If $i \bmod (n-m) = 0$, then clearly $2i \bmod (n-m) = 0$, and $x_i = x_{2i}$;
+
+if $x_{i} = x_{2i}$, then $x_{i \bmod (n-m)} = x{2i \bmod (n-m)}$. Thus, $i
+\bmod (n-m) = (2 \bmod (n-m))(i \bmod (n-m))$. So we either have $2 \bmod (n-m)
+= 1$ or $i \bmod (n-m) = 0$. But $2 \bmod (n-m)$ implies $n-m = 1$. Therefore,
+we have $i \bmod (n-m) = 0$ anyway.
+\end{proof}
+
+The above theorem means that by the time $i = (n-m)$, we must have $x_{2i} =
+x_i$. It also means it's the first time that this ever happens, thanks to the
+iff. Thus, Floyd's algorithm is as follows:
+\begin{quotation}
+	Start from $i = 1$, check if $x_i = x_{2i}$. Stop at the first such $i$.
+	Then, $i$ is the length of the smallest cycle, $n-m$, in the hash sequence. To
+	actually find the cycle, apply $H^{n-m}$, start from $x_0$. If for some $j$,
+	$H^{n-m}(x_j) = x_j$, then the first such $j = m$. And we are done.
+\end{quotation}
+
+Note that there's still an unfortuante possiblility that $m = 0$, in which case
+the cycle does not result in a collision. It is unfortunate, and for that I
+thought a lot, see the discussion in \textbf{One possible scenario} and
+\textbf{Another possible scenario}. 
+
+The following two discussions actually happen before I realize Floyd's
+algorithm. One reason is that I incorrectly estimated the number $\sqrt{2^{56}}
+\approx 3 \times 10^8$ to be too large to finish in 15 minutes.  Thus, I thought
+the cycle is needed to also \emph{speed up} the calculation. The following text
+is a result of that misconception: \textbf{I was contemplating how having a
+cycle may also speed up the collision-discovery.}
+
+\paragraph{One possible scenario}
 Let $x$ be any input. I am given $H_0 := H(x), H_n := H(H_{n-1})$, and I know
 that for some $m$, $H_m = H_0$ (assuming no subcycles, i.e., $m$ is the smallest
 number to have a cycle from $H_0$).
@@ -88,14 +185,13 @@ But I fail to see how to use \eqref{q4a.1} to help. I asked a question here
 \url{https://crypto.stackexchange.com/questions/115058/how-can-having-a-cycle-help-finding-a-hash-collision},
 which may find an answer later.
 
-\paragraph{Another possible meaning}
-I later read Section 6.4.3 of [Katz, Lindell, 3rd ed.], which seems to be more
-of the meaning of the questions. But this assumes that the length of the cycle
-equals exactly the cardinality of the range of $H$, which isn't explicitly
-mentioned in the question.
+\paragraph{Another possible scenario}
+I later read Section 6.4.3 of [Katz, Lindell, 3rd ed.], which assumes that the
+length of the cycle equals exactly the cardinality of the range of $H$, which
+isn't explicitly mentioned in the question.
 
-Well, anyway, so this possible scenario is essential the previous one plus this
-additional information:
+Well, anyway, so this possible scenario is essentially the previous one plus
+this additional information:
 \begin{equation}
 	m = \text{ size of the range of } H
 \end{equation}
@@ -132,11 +228,6 @@ the range.
 To store even less bits, reduce the number of segments, which will in turn
 increase the number of hashes we need to do. It is possible to store less than
 $\sqrt{m}$ bits while being able to still do it faster than brute force.
-
-
-
-
-
 
 
 \end{document}
