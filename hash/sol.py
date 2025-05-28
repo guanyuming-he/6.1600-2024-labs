@@ -69,13 +69,55 @@ def problem_3e(L,N):
     prob = problem_3d(L,2**N)
     return prob
 
+def repeat_H(x, i):
+    for j in range(i):
+        x = hashbig.H(x)
+    return x
+
+
 # return h1,h2 where H(h1) == H(h2)
 def problem_4b():
-    h1 = None
-    h2 = None
-    return h1,h2
+    # It turns out to be a little different from what 4a means.
+    # Here we don't have a cycle. We must find one instead.
+    # But I believe the point of the problem is to let us realize
+    # that in real life it's very unpractical to store all checked hash values.
+    # And then to inspire us to use existing structures like cycles to
+    # significantly reduce the number of hash values stored.
+
+    # Floyd's algorithm relies on:
+    # Let the cycle appear when x_m = x_n for 0 <= m < n,
+    # then x_i = x_{2i} iff i mod (n-m) = 0.
+    # Thus, we check the first i for which x_i = x_{2i}
+    # and we have that i equals to cycle len.
+
+    # How did I find this value?
+    # I just used this one and it worked.
+    x_0 = b'001'
+
+    # In python, a str is immutable,
+    # so these references are not by reference.
+    x_i = x_0
+    x_2i = x_0
+    i = 0
+    for i in tqdm(range(1, 2**56+1)):
+        x_i = H(x_i);
+        x_2i = H(H(x_2i))
+
+        if (x_i == x_2i):
+            break
+
+    # run until they meet.
+    while True:
+        l_next = H(x_0)
+        r_next = H(x_i)
+
+        if (l_next == r_next):
+            return l_next,r_next
+        else:
+            x_0 = l_next
+            x_i = r_next
 
 
 # Tests
 if __name__ == "__main__":
-    problem_2c()
+    print(problem_4b())

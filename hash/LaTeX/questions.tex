@@ -119,13 +119,23 @@ Then, for any $0 \le i$:
 If $i < m$, because the first few $m$ elements are distinct to all others, we by
 definition have $x_i \ne x_{2i}$.
 
-Now suppose $i \ge m$. By the cycle, we know that $x_{i} = x_{i \bmod (n-m)}$.
-If $i \bmod (n-m) = 0$, then clearly $2i \bmod (n-m) = 0$, and $x_i = x_{2i}$;
+Now suppose $i \ge m$. By the cycle, we know that $x_{i} = x_{m + [(i-m) \bmod
+(n-m)]}$.
+Note that ($a,b,c$ are general here, but for convenience I will write $c := n-m$
+later.
+\[
+	(a+b) \bmod c = [(a \bmod c) + (b \bmod c)] \bmod c
+\]	
+Thus,
+\begin{align*}
+	(i-m) \bmod c &= [(i \bmod c) + (-m \bmod c)] \bmod c \\
+	(2i-m) \bmod c &= [(2i \bmod c) + (-m \bmod c)] \bmod c 
+\end{align*}
 
-if $x_{i} = x_{2i}$, then $x_{i \bmod (n-m)} = x{2i \bmod (n-m)}$. Thus, $i
-\bmod (n-m) = (2 \bmod (n-m))(i \bmod (n-m))$. So we either have $2 \bmod (n-m)
-= 1$ or $i \bmod (n-m) = 0$. But $2 \bmod (n-m)$ implies $n-m = 1$. Therefore,
-we have $i \bmod (n-m) = 0$ anyway.
+If $i \bmod (n-m) = 0$, then clearly the two are equal, and $x_i = x_{2i}$;
+
+If $x_i = x_{2i}$, then we must have $(i \bmod c = 2i \bmod c) \mod c$, which
+means $i = 2i \mod c$. Thus, $(2i-i) \mod c = 0$, as desired.
 \end{proof}
 
 The above theorem means that by the time $i = (n-m)$, we must have $x_{2i} =
@@ -134,14 +144,24 @@ iff. Thus, Floyd's algorithm is as follows:
 \begin{quotation}
 	Start from $i = 1$, check if $x_i = x_{2i}$. Stop at the first such $i$.
 	Then, $i$ is the length of the smallest cycle, $n-m$, in the hash sequence. To
-	actually find the cycle, apply $H^{n-m}$, start from $x_0$. If for some $j$,
-	$H^{n-m}(x_j) = x_j$, then the first such $j = m$. And we are done.
+	actually find the cycle, apply $H$, from both $x_0$ and either of $x_i$ and
+	$x_{2i}$ until they meet. 
+
+	Note that they are guaranteed to meet after $m$ times, because
+	\[
+		\forall j \le m, x_{0+j} = x_{m + (i-m+j) \bmod (n-m)}
+	\]
+	and we just set $j = m$ to obtain both subscripts equals $m$.
+
+	But since we don't know $m$, the final output is obtained by running from
+	$x_0$ and one of $x_i$ or $x_{2i}$, and continue until they meet, but don't
+	set them to the new values until we are sure they don't meet.
 \end{quotation}
 
 Note that there's still an unfortuante possiblility that $m = 0$, in which case
-the cycle does not result in a collision. It is unfortunate, and for that I
-thought a lot, see the discussion in \textbf{One possible scenario} and
-\textbf{Another possible scenario}. 
+the cycle does not result in a collision that we can know. It is unfortunate,
+and for that I thought a lot, see the discussion in \textbf{One possible
+scenario} and \textbf{Another possible scenario}. 
 
 The following two discussions actually happen before I realize Floyd's
 algorithm. One reason is that I incorrectly estimated the number $\sqrt{2^{56}}
