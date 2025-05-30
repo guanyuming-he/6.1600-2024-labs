@@ -1,6 +1,11 @@
 from common import H_empty, H_kv, H_internal, traversal_path, Proof
 
 class Client:
+    """
+    Guany: Note that store is of type RemoteStore,
+    not Store! See cli.py.
+    This is one point of Python that makes it sometimes confusing.
+    """
     def __init__(self, store, root_hash = H_empty()):
         self._store = store
         self._root_hash = root_hash

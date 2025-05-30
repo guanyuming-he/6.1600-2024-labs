@@ -1,6 +1,15 @@
 from common import H_empty, H_kv, H_internal, traversal_path, Proof
 
 class Traversal:
+    """
+    Guany:
+    It appears that the traversal class only stores the current state of the
+    traversal, while the actual traversal is done by a Node that changes the
+    states here.
+
+    I argue that it is a bad design, to separate states and the operations
+    that change it.
+    """
     def __init__(self, path):
         self._siblings = []
         self._path = path
@@ -80,6 +89,9 @@ class LookupTraversal(Traversal):
         return n
 
     def proof(self):
+        """
+        Returns the proof of the tree before the operation.
+        """
         return node_proof(self._leaf, self._siblings)
 
 class InsertTraversal(Traversal):
@@ -103,6 +115,11 @@ class InsertTraversal(Traversal):
         return InternalNode(children).traverse(self)
 
     def proof(self):
+        """
+        Returns the proof of the tree before the operation.
+        Why before? Because the client wants to verify that the store before the
+        operation was in an expected state.
+        """
         return self._proof
 
 class Store:

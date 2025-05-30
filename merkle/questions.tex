@@ -1,0 +1,37 @@
+\documentclass{article}
+
+\begin{document}
+\begin{quotation}
+When you restart the server (kill the running server and run make run-server
+again), what happens to subsequent client lookups (get operations)? How does the
+client know that the server restarted?
+\end{quotation}
+If the previous tree was not empty, then the subsequent client lookups will fail
+with \texttt{Exception("Root hash mismatch").}
+
+If the previous tree was empty, then the lookups will succeed, but return None.
+
+The client knows because it will store the previous root hash in merkle.root
+before exiting and read it upon starting.
+
+\begin{quotation}
+Why do subsequent client updates (put operations) fail to execute after a server
+restart? What would go wrong if they didn’t fail?
+\end{quotation}
+Because the server was not in the state (represented by the root hash) that the
+client expected the server to be.
+
+What would go wrong if they didn't fail? Well, then it would be as if there was
+no check at all.
+
+
+\begin{quotation}
+How many siblings are included in the proof to verify the node for get foo after
+you’ve inserted both foo=bar and hello=world into the store, as in the above
+example? Explain why that is.
+\end{quotation}
+Nine siblings. It turns out that they have the first eight bits of their hashes
+equal.
+
+
+\end{document}
