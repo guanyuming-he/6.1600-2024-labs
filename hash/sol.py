@@ -106,6 +106,11 @@ def problem_4b():
         if (x_i == x_2i):
             break
 
+    if x_0 == x_i:
+        raise Exception(
+        "Unlucky, we got a perfect cycle and "
+        "can't do anything about it.")
+
     # run until they meet.
     while True:
         l_next = H(x_0)
