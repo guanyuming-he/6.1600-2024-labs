@@ -8,7 +8,9 @@ class Traversal:
     states here.
 
     I argue that it is a bad design, to separate states and the operations
-    that change it.
+    that change it. But perhaps the professors' goal was to keep the code simple
+    and minimal, at the price of leaking abstraction and making it a bit more
+    confusing.
     """
     def __init__(self, path):
         self._siblings = []
@@ -90,6 +92,7 @@ class LookupTraversal(Traversal):
 
     def proof(self):
         """
+        Guany:
         Returns the proof of the tree before the operation.
         """
         return node_proof(self._leaf, self._siblings)
@@ -116,6 +119,7 @@ class InsertTraversal(Traversal):
 
     def proof(self):
         """
+        Guany:
         Returns the proof of the tree before the operation.
         Why before? Because the client wants to verify that the store before the
         operation was in an expected state.

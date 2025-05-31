@@ -6,6 +6,7 @@ import traceback
 def scenario_one():
     s = store.Store()
     c = client.Client(s)
+    c.verbose_validate = True
 
     k = b'hello'
     v = b'world'
