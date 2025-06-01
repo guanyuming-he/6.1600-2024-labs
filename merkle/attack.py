@@ -204,7 +204,7 @@ class AttackFour:
         direction).
         Most importantly, when updating the root_hash later, the client will
         either do a H( H(k1,v1) || k0||v0) or H(k0||v0 || H(k1,v1)), depending on
-        the traversal path.
+        the traversal path. Let this hash be H1.
         This is the key to gradually increasing the length of the preimage.
     - We go one step over to see the process generally.
       Proof(None, None, [ H_1 ]),
