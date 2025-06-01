@@ -163,14 +163,92 @@ class AttackThree:
         
 
 class AttackFour:
+    """
+    Guany:
+    Without the len(k||v) >= 1000 limit,
+    one could simply set k||v as a preimg of the root_hash in the proof chain.
+    But the preimage of the root_hash in the proof chain is always 256 or 512
+    bits.
+
+    Clearly, we can't brute force a preimage of the root_hash, as SHA256 is
+    one-way.
+
+    However, we could manipulate the root hash in some way, since we take
+    control of all the proofs returned from insert. It is not trivial, as the
+    client controls how it calcualtes the root hash after an insert. A few
+    ideas:
+    - We can manipulate proof.key, so long as the final hash is correct. The
+      key doesn't have to be equal to the one inserted, because it's the proof
+      state of the tree before the insertion.
+    - Similarly, as the client doesn't check the val of the proof, we can
+      manipulate it, too.
+    - We also can control the siblings. Thus, different from the previous
+      attacks, we have full control over proof, so long as it matches the
+      previous root hash.
+    - Still, for the first proof, it has to be (None, None, []) for the root
+      hash to be b''.
+
+    A key requirement is that we must find a way to get a long preimage of a
+    root hash. It's not clear how it can be done from only here, so we look
+    into the first few insertions from the client, which we may gain
+    inspiration from.
+
+    - First, client inserts k0, v0.
+        We have no choice but to return Proof(None, None, []) here.
+        Then, root_hash = H_kv(k0, v0) = H(k0||v0).
+    - Then, clients inserts k1, v1.
+        We can freely manipulate the proof so long as the hash derived from it
+        equals H(k0||v0). It suddenly appears that we can return
+        Proof(None, None, [k0||v0]), which will make the client skip the
+        collision path completely and compute H(b'' || k0||v0) (or the other
+        direction).
+        Most importantly, when updating the root_hash later, the client will
+        either do a H( H(k1,v1) || k0||v0) or H(k0||v0 || H(k1,v1)), depending on
+        the traversal path.
+        This is the key to gradually increasing the length of the preimage.
+    - We go one step over to see the process generally.
+      Proof(None, None, [ H_1 ]),
+      and the client calculates root_hash = H( H(k2||v2) || H1) or the other
+      direction.
+    - Hence, generally, 
+      Define H_0 = k0||v0, H_1 = H(k1||v1) || H_0 or H0 || H(k1||v1),
+      H_{n+1} := H(k_{n+1}||v_{n+1}) || H_n or the other order.
+    """
     def __init__(self, s):
         self._store = s
+        self._fakekey:str = b''
+        self._ins_count:int = 0
 
     def insert(self, key, val):
-        return self._store.insert(key, val)
+        ret: Proof
+        if self._ins_count == 0:
+            ret = Proof(None, None, [])
+        else:
+            # str is immutable, so don't worry about
+            # referring the _fakekey which is modified later.
+            ret = Proof(None, None, [self._fakekey])
+
+        # append the k||v or H(k||v) to the left or to the right,
+        # depending on the _ins_count and path.
+        if self._ins_count == 0:
+            self._fakekey = key + val
+        else:
+            path = traversal_path(key)
+            hkv = H_kv(key, val)
+            if (int(path[0]) == 0):
+                self._fakekey = hkv + self._fakekey
+            else: # == 1 
+                self._fakekey = self._fakekey + hkv
+            
+        self._ins_count += 1
+
+        return ret
 
     def attack_fake_key(self):
-        return b''
+        return self._fakekey[:500]
 
     def lookup(self, key):
-        return self._store.lookup(key)
+        if (key == self._fakekey[:500]):
+            return Proof(self._fakekey[:500], self._fakekey[500:], [])
+        else:
+            return self._store.lookup(key)
