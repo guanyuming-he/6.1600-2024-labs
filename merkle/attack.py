@@ -121,11 +121,46 @@ class AttackTwo:
         )
 
 class AttackThree:
+    """
+    Guany:
+    With the limits, we are required to give a proof p such that
+    p.key = p.val = None, and
+    H(p.sibling) = root_hash after 1000 key insertions.
+
+    It is not very hard, as we can just query the store to get a proof,
+    and compute the preimage of the root hash from it.
+    """
     def __init__(self, s):
         self._store = s
 
     def lookup(self, key):
-        return self._store.lookup(key)
+        true_proof = self._store.lookup(key)
+        # Compute the preimage of the root hash.
+        h_node = \
+            H_kv(true_proof.key, true_proof.val) \
+            if true_proof.key is not None or true_proof.val is not None \
+            else H_empty()
+
+        path = traversal_path(true_proof.key)
+        # It cannot be empty as we have 1000 keys.
+        max_len = min(len(path), len(true_proof.siblings))
+        traverse = reversed(list(zip(path, true_proof.siblings)))
+        preimg: str = None
+        i: int = 0;
+        # Compute the hash until we are about to reach the root.
+        for (leaf_dir, sib) in traverse:
+            c = [None, None]
+            c[int(leaf_dir)]        = h_node
+            c[int(not leaf_dir)]    = sib
+            if (i < max_len-1):
+                h_node = H_internal(c)
+            else:
+                # Don't calcualate the hash
+                preimg = b''.join(c)
+            i += 1
+
+        return Proof(None, None, [preimg])
+        
 
 class AttackFour:
     def __init__(self, s):
